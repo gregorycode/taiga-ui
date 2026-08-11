@@ -1,5 +1,6 @@
-import {Node, ts} from 'ng-morph';
+import {getImports, Node, ts} from 'ng-morph';
 
+import {ALL_TS_FILES} from '../../constants';
 import {type TuiSchema} from '../../ng-add/schema';
 import {addUniqueImport} from '../../utils/add-unique-import';
 import {
@@ -39,30 +40,70 @@ export function replaceIdentifiers(
 }
 
 export function replaceIdentifier({from, to}: ReplacementIdentifierMulti): void {
-    const references = toArray(from)
+    const fromList = toArray(from);
+    const references = fromList
         .map(({name, moduleSpecifier}) => getNamedImportReferences(name, moduleSpecifier))
         .flat();
 
     references.forEach((ref) => {
-        if (ref.wasForgotten()) {
+        if (ref.wasForgotten() || isImportContext(ref)) {
             return;
         }
 
-        const parent = ref.getParent();
+        const decorator = ref.getParentWhile(
+            (node) => node.getKindName() !== 'Decorator',
+        );
 
-        if (Node.isImportSpecifier(parent)) {
-            removeImport(parent);
-            addImports(to, parent.getSourceFile().getFilePath());
-        } else {
-            const decorator = ref.getParentWhile(
-                (node) => node.getKindName() !== 'Decorator',
-            );
+        const inModule =
+            decorator?.getFirstChildIfKind(ts.SyntaxKind.Identifier)?.getText() ===
+            'NgModule';
 
-            const inModule =
-                decorator?.getFirstChildIfKind(ts.SyntaxKind.Identifier)?.getText() ===
-                'NgModule';
+        ref.replaceWithText(getReplacementText(to, inModule));
+    });
 
-            ref.replaceWithText(getReplacementText(to, inModule));
+    // Rewrite the import declarations with a fresh lookup rather than the references
+    // above. When an earlier entry edits the same declaration (e.g. adds a named
+    // import via addUniqueImport), ng-morph hands back a stale reference whose parent
+    // is the whole `NamedImports` node instead of the `ImportSpecifier`, so the old
+    // import specifier is never rewritten — the case that left TuiMultiSelect /
+    // TuiComboBox stuck in @taiga-ui/legacy.
+    fromList.forEach(({name, moduleSpecifier}) =>
+        rewriteImportDeclarations(name, moduleSpecifier, to),
+    );
+}
+
+function isImportContext(ref: Node): boolean {
+    const kind = ref.getParent()?.getKindName();
+
+    return (
+        kind === 'ImportSpecifier' || kind === 'NamedImports' || kind === 'ImportClause'
+    );
+}
+
+function rewriteImportDeclarations(
+    name: string,
+    moduleSpecifier: string[] | string | undefined,
+    to: ReplacementIdentifierMulti['to'],
+): void {
+    if (!moduleSpecifier) {
+        return;
+    }
+
+    const declarations = getImports(ALL_TS_FILES, {
+        namedImports: [name],
+        moduleSpecifier: Array.isArray(moduleSpecifier)
+            ? moduleSpecifier
+            : [moduleSpecifier, `${moduleSpecifier}/**`],
+    });
+
+    declarations.forEach((declaration) => {
+        const specifier = declaration
+            .getNamedImports()
+            .find((namedImport) => namedImport.getName() === name);
+
+        if (specifier) {
+            removeImport(specifier);
+            addImports(to, declaration.getSourceFile().getFilePath());
         }
     });
 }
