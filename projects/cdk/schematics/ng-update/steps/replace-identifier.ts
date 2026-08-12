@@ -1,4 +1,4 @@
-import {getImports, Node, ts} from 'ng-morph';
+import {getImports, type Node, ts} from 'ng-morph';
 
 import {ALL_TS_FILES} from '../../constants';
 import {type TuiSchema} from '../../ng-add/schema';
@@ -41,6 +41,7 @@ export function replaceIdentifiers(
 
 export function replaceIdentifier({from, to}: ReplacementIdentifierMulti): void {
     const fromList = toArray(from);
+
     const references = fromList
         .map(({name, moduleSpecifier}) => getNamedImportReferences(name, moduleSpecifier))
         .flat();
