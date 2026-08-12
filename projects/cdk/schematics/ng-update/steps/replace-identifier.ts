@@ -62,12 +62,9 @@ export function replaceIdentifier({from, to}: ReplacementIdentifierMulti): void 
         ref.replaceWithText(getReplacementText(to, inModule));
     });
 
-    // Rewrite the import declarations with a fresh lookup rather than the references
-    // above. When an earlier entry edits the same declaration (e.g. adds a named
-    // import via addUniqueImport), ng-morph hands back a stale reference whose parent
-    // is the whole `NamedImports` node instead of the `ImportSpecifier`, so the old
-    // import specifier is never rewritten — the case that left TuiMultiSelect /
-    // TuiComboBox stuck in @taiga-ui/legacy.
+    // Move imports via a fresh lookup: an earlier entry editing the same declaration
+    // can leave a stale reference whose parent is `NamedImports`, not the
+    // `ImportSpecifier`, so the old import would otherwise never be rewritten.
     fromList.forEach(({name, moduleSpecifier}) =>
         rewriteImportDeclarations(name, moduleSpecifier, to),
     );
