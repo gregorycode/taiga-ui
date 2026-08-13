@@ -1,9 +1,24 @@
-<button
-    appearance="outline"
-    tuiButton
-    type="button"
-    (click)="playing = !playing"
->
-    Pulse
-    <tui-pulse [playing]="playing" />
-</button>
+<p>{{ index() }}</p>
+<tui-infinite-scroll [(index)]="index">
+    <ng-template let-index>
+        <div
+            class="item"
+            [style.background]="index.toString() | tuiAutoColor"
+        >
+            {{ index }}
+        </div>
+    </ng-template>
+</tui-infinite-scroll>
+
+<p>loh</p>
+
+<!--<div class="loh">-->
+<!--    @for (_ of '-'.repeat(10000); track $index) {-->
+<!--        <div-->
+<!--            class="item"-->
+<!--            [style.background]="$index.toString() | tuiAutoColor"-->
+<!--        >-->
+<!--            {{ $index }}-->
+<!--        </div>-->
+<!--    }-->
+<!--</div>-->

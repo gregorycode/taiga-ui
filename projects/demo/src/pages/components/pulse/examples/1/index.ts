@@ -1,15 +1,16 @@
-import {Component} from '@angular/core';
+import {Component, signal} from '@angular/core';
 import {changeDetection} from '@demo/emulate/change-detection';
 import {encapsulation} from '@demo/emulate/encapsulation';
-import {TuiButton} from '@taiga-ui/core';
-import {TuiPulse} from '@taiga-ui/kit';
+import {TuiInfiniteScroll} from '@taiga-ui/core';
+import {TuiAutoColorPipe} from '@taiga-ui/kit';
 
 @Component({
-    imports: [TuiButton, TuiPulse],
+    imports: [TuiAutoColorPipe, TuiInfiniteScroll],
     templateUrl: './index.html',
+    styleUrl: './index.less',
     encapsulation,
     changeDetection,
 })
 export default class Example {
-    protected playing = true;
+    protected readonly index = signal(0);
 }

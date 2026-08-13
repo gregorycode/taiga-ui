@@ -1,0 +1,18 @@
+tui-infinite-scroll {
+    block-size: 20rem;
+}
+
+.item {
+    padding: 2rem 1rem;
+}
+
+.loh {
+    scrollbar-width: none;
+    overflow: auto;
+    block-size: 20rem;
+    scroll-snap-type: y mandatory;
+
+    .item {
+        scroll-snap-align: start;
+    }
+}

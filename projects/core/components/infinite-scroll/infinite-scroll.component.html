@@ -1,0 +1,11 @@
+<span class="t-buffer"></span>
+@for ($implicit of indices(); track $implicit) {
+    <span
+        class="t-wrapper"
+        [class.t-wrapper_current]="$implicit === index()"
+        (waIntersectionObservee)="onIntersection(!!$event[0]?.isIntersecting, $implicit)"
+    >
+        <ng-container *ngTemplateOutlet="template(); context: {$implicit}" />
+    </span>
+}
+<span class="t-buffer"></span>
